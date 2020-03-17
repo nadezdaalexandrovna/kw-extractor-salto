@@ -1,0 +1,105 @@
+===========
+Introdution
+===========
+This is the German finite-state transducer morphology SMOR (including
+a comprehensive lexicon) which was developed at the Institut für
+maschinelle Sprachverarbeitung (IMS) of the University of Stuttgart.
+
+SMOR covers inflection, derivation and compounding and achieves good
+coverage. It is implemented with SFST, a finite-state transducer toolkit
+developed by Helmut Schmid at IMS.
+
+SMOR analyzes German word forms and returns information about the
+lemma, part-of-speech and morphological features such as number,
+gender, case tense etc. and also information about morphemes.
+
+=====
+Usage
+=====
+SMOR can be used via one of the three shell scripts located in the
+main directory of this package:
+
+smor: This script calls SMOR interactively and supports analysis as
+      well as generation of word forms. After starting the script, you
+      can enter any word form and you will get the full set of
+      possible analyses. Each analysis shows you the stems and
+      derivational morphemes contained in a word form as well as its
+      morphological features. By entering an empty line, you can
+      switch into generation mode. Now you can enter morphological
+      analyses and obtain the corresponding word forms.
+
+Here is an example session:
+> ./smor
+reading transducer...
+finished.
+analyze> Häuserblöcke
+hausen<V>er<NN><SUFF>Block<+NN><Masc><Acc><Pl>
+hausen<V>er<NN><SUFF>Block<+NN><Masc><Gen><Pl>
+hausen<V>er<NN><SUFF>Block<+NN><Masc><Nom><Pl>
+Haus<NN>Block<+NN><Masc><Acc><Pl>
+Haus<NN>Block<+NN><Masc><Gen><Pl>
+Haus<NN>Block<+NN><Masc><Nom><Pl>
+analyze> 
+generate> Haus<NN>Block<+NN><Masc><Nom><Pl>
+Häuserblöcke
+Hausesblöcke
+Hausblöcke
+generate> q
+
+smor-infl: This script is similar to smor but differs in four aspects:
+           It is intended for batch usage and reads its input from a
+           file. It supports analysis, but not generation. It returns
+           only the least complex analyses and not all analyses. And
+           it is able to recognise some non-standard writings: Taking
+           the word "grüßt" as an example, smor-infl would also be
+           able to analyse "Grüßt", "GRÜSST", and "gruesst". It also
+           has heuristics to recognise certain propernames such as
+           street names ending in "...straße".
+
+Here is an example:
+> echo Häuserblöcke | ./smor-infl 
+> Häuserblöcke
+Haus<NN>Block<+NN><Masc><Nom><Pl>
+Haus<NN>Block<+NN><Masc><Gen><Pl>
+Haus<NN>Block<+NN><Masc><Acc><Pl>
+
+smor-lemmatizer: This script return the lemma, part-of-speech, and
+                 morphological features of a word form, but no
+                 information about word formation (derivation,
+                 composition). Part-of-speech and morphological
+                 features follow the STTS tagging schema.
+
+Here is an example:
+> echo Häuserblöcke | ./smor-lemmatizer 
+
+Häuserblöcke    NN.Masc.Nom.Pl Häuserblock
+Häuserblöcke    NN.Masc.Gen.Pl Häuserblock
+Häuserblöcke    NN.Masc.Acc.Pl Häuserblock
+
+===============
+Troubleshooting
+===============
+These scripts call the binaries located in the subdirectory bin.  If
+you have problems with missing libraries or other problems with the
+binaries, you can download the SFST package at
+http://www.cis.uni-muenchen.de/~schmid/tools/SFST, compile it and
+replace fst-mor and fst-infl2 with the new binaries.
+
+
+===================
+Directory structure
+===================
+The other data is organised as follows:
+
+bin: directory containing binaries of the the SFST programs that are
+     needed to use SMOR
+
+lib: directory containing the compiled SMOR transducers
+
+perl: auxiliary Perl scripts used by the shell scripts
+
+
+=======
+Contact
+=======
+Please send questions, bug reports etc. to schmid@cis.uni-muenchen.de.
