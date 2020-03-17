@@ -17,11 +17,11 @@ One keyword may contain several words (ex: dreisprachige RAI).
 
 The module needs the following files to be present in the same folder:
 
-    stoplist-de-bigger.txt
+    stoplist-de.txt
 
     stoplist-it.txt
 
-    names-all2.txt
+    names-all.txt
 
     titles.txt
 
