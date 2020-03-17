@@ -36,13 +36,12 @@ It also needs the directory containing the SMOR tool to be present in the same f
 TreeTagger for German and Italian must be installed, because it is used by the Python module treetaggerwrapper.
 
 
-The script takes 3 arguments:
+The script takes 2 arguments:
 
     -i  the name of the file containing the newspaper text
 
     -o  the name of the output folder
 
-    -l  the main language of the file ("it" or "de")
 
 The extracted keywords are written to a text file of the same name as the input file, with the extension '.KEY' added at the end, 1 keyword \t its translation per line.
 
@@ -86,7 +85,4 @@ Words from the title and the teaser are considered more important than words fro
 
 ## In order to extract keywords from a text, call the extract_keywords() function
 
-## In order to translate keywords extracted from a text, call the translate_keywords(key_words_set, lang_from, lang_to) function.
-The function takes 3 arguments: the set of keywords, the language of the text (lang_from) and the language to which you want to translate the keywords (lang_to).
 
-In order to use the translation function translate_keywords, you need to set the environment variable AZURE where you need to put the subscription key to the Microsoft Azure translation API.

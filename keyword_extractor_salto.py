@@ -40,9 +40,9 @@ One keyword may contain several words (ex: dreisprachige RAI).
 
 
 The module needs the following files to be present in the same folder:
-    stoplist-de-bigger.txt
+    stoplist-de.txt
     stoplist-it.txt
-    names-all2.txt
+    names-all.txt
     titles.txt
     common-de-surnames.txt
     styr_nachnamen.txt
@@ -68,33 +68,24 @@ TreeTagger for German and Italian must be installed, because it is used by the P
 
 2) In order to extract keywords from a text, call the extract_keywords() function
 
-3) In order to translate keywords extracted from a text, call the translate_keywords(key_words_set, lang_from, lang_to) function.
-    The function takes 3 arguments: the set of keywords, the language of the text (lang_from) and the language to which you want to translate the keywords (lang_to).
-    To use the translation function translate_keywords, you need to set the environment variable AZURE where you need to put the subscription key to the Microsoft Azure translation API.
-
-If you do not want to translate keywords with the AZURE translation API and do not have the key, comment the line "SUBSCRIPTION_KEY = os.environ['AZURE']".
 
 The main function of this script takes 3 arguments:
     -i  the name of the file containing the newspaper text
     -o  the name of the output folder that will contain the file with keywords
-    -l  the main language of the file ("it" or "de"). This argument is optional, it is only needed for translation of keywords with AZURE.
-The extracted keywords (and translations) are written to a text file of the same name as the input file, with the extension '.KEY' added at the end, 1 keyword \t its translation per line.
+
+The extracted keywords are written to a text file of the same name as the input file, with the extension '.KEY' added at the end, 1 keyword \t its translation per line.
 """
 
 SCRIPT_FOLDER=os.path.dirname(os.path.realpath(__file__))+"/"
 SMOR_FOLDER = SCRIPT_FOLDER+"SMOR"
 SMOR_EXECUTABLE = SCRIPT_FOLDER+"SMOR"+"/smor-infl"
-STOPLIST_DE_FILE = SCRIPT_FOLDER+"stoplist-de-bigger.txt"
+STOPLIST_DE_FILE = SCRIPT_FOLDER+"stoplist-de.txt"
 STOPLIST_IT_FILE = SCRIPT_FOLDER+"stoplist-it.txt"
-NAMES_FILE = SCRIPT_FOLDER+"names-all2.txt"
+NAMES_FILE = SCRIPT_FOLDER+"names-all.txt"
 TITLES_FILE = SCRIPT_FOLDER+"titles.txt"
 COMMON_DE_SURNAMES_FILE = SCRIPT_FOLDER+"common-de-surnames.txt"
 STYR_SURNAMES = SCRIPT_FOLDER+"styr_nachnamen.txt"
 GOOD_KEYWORDS_FILE = SCRIPT_FOLDER+"good-keywords.txt"
-
-SUBSCRIPTION_KEY = os.environ['AZURE'] #Environment variable that contains the subsription key to Microsoft Azure
-ENDPOINT = "https://api.cognitive.microsofttranslator.com" # Microsoft Azure endpoint
-AZUREPATH = '/translate?api-version=3.0' # Microsoft Azure path
 
 
 class KeywordExtractor():
@@ -110,14 +101,14 @@ class KeywordExtractor():
             logging.error('Could not initialise the KeywordExtractor due to the wrong number of arguments received by the constructor: {}'.format(len(args)))
 
     
-    def _init_from_json(self, json_word: str, json: dict, output_directory: str) -> None:
+    def _init_from_json(self, json_word: str, json: dict, output_folder_name: str) -> None:
         """
         Keyword extractor class for salto.bz articles in German and Italian. Third init function.
     
         Parameters: 
             :param json_word: string with value "json"
             :param hash json: a json object with a Title, a Teaser and a Body
-            :param srt output_directory: The folder that will contain the file with keywords
+            :param srt output_folder_name: The folder that will contain the file with keywords
         """
         
         #Compile POS patterns
@@ -130,13 +121,15 @@ class KeywordExtractor():
         
         try:                
             
-            if not os.path.isdir(output_directory):
-                raise ValueError('Folder {} does not exist. Create it before calling the constructor of the KeywordExtractor.'.format(output_directory))
-                
+            if not os.path.isdir(output_folder_name):
+                raise ValueError('Folder {} does not exist. Create it before calling the constructor of the KeywordExtractor.'.format(output_folder_name))
+              
+            output_directory = os.path.join(output_folder_name, "temp_folder_")
+            self._make_output_directory(output_directory)
             self.output_directory = output_directory
             self._main_lang_sentences = []
             self._second_lang_sentences = []
-            
+            output_folder_name
             try:
                 self._distribute_sentences_per_language_json(json)
             except ValueError as err:
@@ -204,7 +197,7 @@ class KeywordExtractor():
             logging.error('Could not initialise the KeywordExtractor due to the following error: {}'.format(value_error))
             
     
-    def _init_from_file(self, input_file_folder: str, file_name: str, output_directory: str) -> None:
+    def _init_from_file(self, input_file_folder: str, file_name: str, output_folder_name: str) -> None:
         """
         Keyword extractor class for salto.bz articles in German and Italian.
     
@@ -212,7 +205,7 @@ class KeywordExtractor():
     
         :param str input_file_folder: The folder containing the plain text file with the article to find keywords in
         :param str file_name: The name of the plain text file with the article to find keywords in
-        :param srt output_directory: The folder that will contain the file with keywords
+        :param srt output_folder_name: The folder that will contain the file with keywords
     
         """        
         #Compile POS patterns
@@ -224,6 +217,13 @@ class KeywordExtractor():
         self.pattern_digit_punct = re.compile(r"[\d{}]+$".format(re.escape(string.punctuation)))
         
         try:
+            if not os.path.isdir(output_folder_name):
+                raise ValueError('Folder {} does not exist. Create it before calling the constructor of the KeywordExtractor.'.format(output_folder_name))
+                
+            output_directory=os.path.join(output_folder_name, "temp_folder_" + file_name)
+            self._make_output_directory(output_directory)
+            self.output_directory = output_directory
+                
             input_file_path = os.path.join(input_file_folder, file_name)
             self.file_text = self._read_file(input_file_path)
             self.file_text = self.file_text.replace("(",",")
@@ -235,9 +235,7 @@ class KeywordExtractor():
             #If the text of the file is too short (less than 50 characters), refuses to analyse it
             if len(self.file_text) < 50:
                 raise ValueError('The content of file {} is too short to be analysed.'.format(input_file_path))
-            
-            self.output_directory = output_directory
-            
+                
             self._main_lang_sentences = []
             self._second_lang_sentences = []
             
@@ -308,14 +306,14 @@ class KeywordExtractor():
             
             
     
-    def _init_from_text(self, salto_text: str, output_directory:str) -> None:
+    def _init_from_text(self, salto_text: str, output_folder_name:str) -> None:
         """
         Keyword extractor class for salto.bz articles in German and Italian. Second init function.
     
         Parameters:
     
             :param str salto_text: the content of the salto article in plain text format
-            :param srt output_directory: The folder that will contain the file with keywords
+            :param srt output_folder_name: The folder that will contain the file with keywords
             :param str tagdir: directory where Treetagger is installed (with bin, cmd and lib inside)
             :param str lang: the main language of the text (optional parameter)
     
@@ -342,9 +340,11 @@ class KeywordExtractor():
             self.file_text = self.file_text.replace("|","===")
             self.file_text = self.file_text.replace("+","#=#")
             
-            if not os.path.isdir(output_directory):
-                raise ValueError('Folder {} does not exist. Create it before calling the constructor of the KeywordExtractor.'.format(output_directory))
+            if not os.path.isdir(output_folder_name):
+                raise ValueError('Folder {} does not exist. Create it before calling the constructor of the KeywordExtractor.'.format(output_folder_name))
                 
+            output_directory=os.path.join(output_folder_name, "temp_folder_")
+            self._make_output_directory(output_directory)  
             self.output_directory = output_directory
             
             self._main_lang_sentences = []
@@ -489,7 +489,8 @@ class KeywordExtractor():
         self.key_words_set = chosenKeywordsSet
         
         #Remove the temporary directory
-        shutil.rmtree(self.output_directory)
+        if os.path.exists(self.output_directory):
+            shutil.rmtree(self.output_directory)
         
         return self.key_words_set
         
@@ -2938,49 +2939,19 @@ class KeywordExtractor():
         
         return strings_to_take
     
-    def _translate_with_azure(self, text_to_translate: str, from_lang: str, to_lang: str) -> str:
+    def _make_output_directory(self, folder: str) -> None:
         """
-        Translates one keyword with Microsoft Azure.
-        Takes as arguments a keyword, its language and the language to translate into.
-        Parameters:
-    
-        :param text_to_translate: The keyword to translate.
-        :param from_lang: Language of the keyword, to translate it from.
-        :param to_lang: Language to translate the keyword into.
-        
-        Returns the translation.
+        Create a directory.
         """
-        params = '&from=' + from_lang + '&to=' + to_lang
-        constructed_url = ENDPOINT + AZUREPATH + params
-        headers = {
-            'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY,
-            'Content-type': 'application/json',
-            'X-ClientTraceId': str(uuid.uuid4())
-        }
-    
-        body = [{'text': text_to_translate}]
-        request = requests.post(constructed_url, headers=headers, json=body)
-        response = request.json()    
-        return response[0]["translations"][0]["text"]
-    
-    def translate_keywords(self, key_words_set: set, lang_from: str, lang_to: str) -> list:
-        """
-        Translates a set of keywords with Microsoft Azure.
-        Takes as arguments a set of keywords, their language and the language to translate them into.
-        Parameters:
-    
-        :param key_words_set: The set of keywords to translate.
-        :param from_lang: Language of the keywords, to translate them from.
-        :param to_lang: Language to translate the keywords into.
-        
-        Returns a list of lists. Each small list contains a keyword and its translation.
-        Example: [["Lehrer","insegnante"],["Student","alunno"]]
-        """
-        list_lists_kw_transl = []
-        for kw in key_words_set:
-            transl = self._translate_with_azure(kw, lang_from, lang_to)
-            list_lists_kw_transl.append([kw, transl])
-        return list_lists_kw_transl
+        try:
+            if not os.path.exists(folder):
+                os.makedirs(folder)
+            else:
+                logging.warning("\nFolder "+folder+" already exists.\n")
+        except Exception as e:
+            logging.warning("\nCould not create folder "+folder+" due to the following error:\n")
+            logging.warning(e) 
+
 
 def make_output_directory(folder: str) -> None:
     """
@@ -3000,33 +2971,19 @@ def main():
     parser = argparse.ArgumentParser(description='''This script extracts keywords from a file containing text.''')
     parser.add_argument('-i', metavar='file_to_find_keywords_in', help='name of the file containing the text to extract keywords from', required=True)
     parser.add_argument('-o', metavar='output_directory', help='name of the folder that will contain the file with keywords', required=True)
-    parser.add_argument('-l', metavar='main_language_of_the_file', help='main language of the text to extract keywords from ("it" or "de"). Needed only for translation of keywords with AZURE', required=False)
     
     args = vars(parser.parse_args())
-    
-    #Define the languages to translate from and to
-    text_lang = args['l']
-    lang_from = ""
-    lang_to = ""
-    
-    if text_lang is not None: 
-        if  text_lang.lower().startswith("de")  or text_lang.lower().startswith("dt")  or text_lang.lower().startswith("ge") :
-            lang_from = "de"
-            lang_to = "it"
-        elif text_lang.lower().startswith("it"):
-            lang_from = "it"
-            lang_to = "de"
     
     script_folder, script_name = os.path.split(os.path.abspath(__file__))
     input_file_folder, input_file_name = os.path.split(os.path.abspath(args['i']))
     output_folder_name = os.path.abspath(args['o'])
-    outputDirectory=os.path.join(output_folder_name, "temp_folder_"+input_file_name)
+    #outputDirectory=os.path.join(output_folder_name, "temp_folder_"+input_file_name)
     
     #Make the output directory
     make_output_directory(output_folder_name)
     
     #Make the temporary directory
-    make_output_directory(outputDirectory)
+    #make_output_directory(outputDirectory)
     
     logFile = os.path.join(output_folder_name, script_name+".log")
     logging.basicConfig(filename=logFile, level=logging.WARNING)
@@ -3036,29 +2993,18 @@ def main():
     
     try:
         #Initialise the module
-        key_word_extractor = KeywordExtractor( input_file_folder, input_file_name, outputDirectory) # initialises the module to read an article from a file
+        key_word_extractor = KeywordExtractor( input_file_folder, input_file_name, output_folder_name) # initialises the module to read an article from a file
         #key_word_extractor = KeywordExtractor( "json", json, outputDirectory) # initialises the module to read an article from a json
         
         #Extract the keywords
         key_words_set = key_word_extractor.extract_keywords() # key_words_set contains the set of keywords extracted from the article
         
-        #Translate the keywords
-        list_of_lists_kw_transl=[]
-        if text_lang is not None:
-            print("text_lang is not None")
-            #list_of_lists_kw_transl = key_word_extractor.translate_keywords(key_words_set, lang_from, lang_to) # A list of lists, each small list contains a keyword and its translation
-            
+        #Print the keywords to a file
         keywordsFileName = os.path.join(output_folder_name, input_file_name+".KEY")
         keywordsFile = io.open(keywordsFileName, mode="w", encoding="utf-8")
         
-        if len(list_of_lists_kw_transl) > 0:
-            for listKWTR in list_of_lists_kw_transl:
-                keyword = listKWTR[0]
-                tr = listKWTR[1]
-                keywordsFile.write(keyword+"\t"+tr+"\n")
-        else:
-            for keyword in key_words_set:
-                keywordsFile.write(keyword+"\n")
+        for keyword in key_words_set:
+            keywordsFile.write(keyword+"\n")
             
         keywordsFile.close()
     
