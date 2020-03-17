@@ -1,4 +1,4 @@
-The script keywords-extractor-salto.py extracts keywords from short newspaper articles in German and Italian (salto.bz articles).
+The module KeywordExtractor in the file keyword_extractor_salto.py extracts keywords from short newspaper articles in German and Italian (salto.bz articles).
 
 Usually extracts between 2 and 10 keywords.
 
