@@ -110,6 +110,8 @@ class KeywordExtractor():
             :param hash json: a json object with a Title, a Teaser and a Body
             :param srt output_folder_name: The folder that will contain the file with keywords
         """
+        print("in init from json")
+        print(json)
         
         #Compile POS patterns
         self.noun_or_verb_pattern = re.compile("(NN|NNS|NO|VV|VE)")
@@ -2736,6 +2738,8 @@ class KeywordExtractor():
         body = self._clean_file_text(json["Body"])
         
         self.file_text = title +"\n" + teaser + "\n" + body
+        
+        print(self.file_text)
         
         #Split sentences
         sentencesTitle = split_multi(title)
