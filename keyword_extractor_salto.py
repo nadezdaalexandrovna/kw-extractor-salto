@@ -5,10 +5,8 @@
 """
 
 import sys, io, os, subprocess, copy, difflib, argparse, logging, re, string, operator, treetaggerwrapper, editdistance, regex, shutil
-#from pprint import pprint
 from segtok.segmenter import split_multi
 from langdetect import detect
-#from typing import TypeVar, Generic
 import requests, uuid, json
 from operator import itemgetter
 
@@ -110,8 +108,6 @@ class KeywordExtractor():
             :param hash json: a json object with a Title, a Teaser and a Body
             :param srt output_folder_name: The folder that will contain the file with keywords
         """
-        print("in init from json")
-        print(json)
         
         #Compile POS patterns
         self.noun_or_verb_pattern = re.compile("(NN|NNS|NO|VV|VE)")
@@ -523,7 +519,6 @@ class KeywordExtractor():
         """
         newHash = {}
         for el in proper_nouns_hash:
-            #print(el)
             if el not in noun_lemma_dict:
                 newHash[el] = proper_nouns_hash[el]
                 continue
@@ -2739,8 +2734,6 @@ class KeywordExtractor():
         
         self.file_text = title +"\n" + teaser + "\n" + body
         
-        print(self.file_text)
-        
         #Split sentences
         sentencesTitle = split_multi(title)
         where_is_the_sentence = "TITLE:"        
@@ -2993,12 +2986,19 @@ def main():
     logging.basicConfig(filename=logFile, level=logging.WARNING)
     
     # A json for test
-    json = {'Title': 'DFB Trainingslager: Um Aufklärung bemüht', 'Teaser': 'Wer ist Schuld am Unfall der beiden Rennfahrer Pascal Wehrlein und Nico Rosberg. Waren sie zu schnell unterwegs? Wurde die Strecke nicht gut genug gesichert? Oder tragen die Schaulustigen, die am Ende als verletzte Opfer im Krankenhaus landeten, auch eine Verantwortung?', 'Body': 'Antworten auf diese Fragen gab es aus dem Passeiertal bereits einige. Noch am Abend des Unfalls, bei dem die beiden Rennfahrer Nico Rosberg und Pascal Wehrlein zwei Personen mit ihren Mercedes-Sportwagen erfassten und verletzten, gab der Passeierer Hotelier und Gemeinderat Heinrich Dorfer eine erste Stellungnahme ab. Es sei alles reglulär und nach bestem Wissen und Gewissen zugegangen, die beiden Piloten seien nicht schnell gefahren, es habe sich "um einen blöden Zufall" gehandelt, sagte Dorfer in der RAI Tagesschau vom 27. Mai. Auf einer heute Mittag einberufenen Pressekonferenz äußerte sich der Trainer des DFB-Teams, Oliver Bierhoff. Er war zusammen mit den beiden Fahrern Rosberg und Wehrlein bereits bei den Verletzten im Krankenhaus gewesen und "dass der DFB eng mit allen Behörden zusammenarbeiten werden, um so rasch wie möglich Aufklärung in den Fall zu bringen." Auch sprach Bierhoff davon, dass diese Art von Werbung grundsätzlich zu überdenken sei.	Auch Bürgermeisterin Rosmarie Pamer möchte nun wieder etwas Ruhe einkehren lassen, nachdem feststeht, dass der 63jährige verletzte Deutsche aus Thüringen außer Lebensgefahr ist. Das Trainingslager der deutschen Nationalelf solle sich unter glücklicheren Umständen fortsetzen. Trotzdem, der schwere Unfall wird in der deutschen Tagespresse gehörig kommentiert. Die Süddeutsche Zeitung titelt etwa "Drama beim Werbe-Dreh des DFB-Teams" und lässt auch die Passeirer Bürgermeisterin in einem Video-Interview zu Wort kommen, in dem sie von einem "schweren Schock" spricht.	Noch größer bringt die deutsche Bild-Zeitung die Story. "Ich hätte tot sein können" zitiert der Reporter den zweiten Verletzten, den Streckenposten Michael Klotz aus Walten. Er liegt mit dem Verdacht auf ein Schädelhirntrauma im Bozner Krankenhaus und wurde von lokalen und deutschen Reportern bereits interviewt. Den Unfallhergang beschreibt er ganz genau. Der deutsche Tourist habe nicht auf der Straße, sonden abseits davon gestanden und wollte ein Foto machen. "Trotzdem habe ich geschrien und bin zu ihm hingelaufen, wollte ihn wegziehen, da war es schon zu spät." Da hatte Nico Rosberg bereits gebremst, offensichtlich durch den Tumult irritiert, und das Auto des hinter ihm fahrenden Pascal Wehrlein hatte die beiden Männer im nächsten Moment zu Boden gerissen.	Die Carabinieri haben nun die Ermittlungen aufgenommen und bereits Augenzeugen befragt, auch den verletzten Streckenposten, der noch sagte: "Vielleicht hätten sie da nicht ganz so schnell sein müssen, nicht ganz so viel Theater machen sollen. Aber ich weiß es nicht.'}
+    #json = {'Title': 'DFB Trainingslager: Um Aufklärung bemüht', 'Teaser': 'Wer ist Schuld am Unfall der beiden Rennfahrer Pascal Wehrlein und Nico Rosberg. Waren sie zu schnell unterwegs? Wurde die Strecke nicht gut genug gesichert? Oder tragen die Schaulustigen, die am Ende als verletzte Opfer im Krankenhaus landeten, auch eine Verantwortung?', 'Body': 'Antworten auf diese Fragen gab es aus dem Passeiertal bereits einige. Noch am Abend des Unfalls, bei dem die beiden Rennfahrer Nico Rosberg und Pascal Wehrlein zwei Personen mit ihren Mercedes-Sportwagen erfassten und verletzten, gab der Passeierer Hotelier und Gemeinderat Heinrich Dorfer eine erste Stellungnahme ab. Es sei alles reglulär und nach bestem Wissen und Gewissen zugegangen, die beiden Piloten seien nicht schnell gefahren, es habe sich "um einen blöden Zufall" gehandelt, sagte Dorfer in der RAI Tagesschau vom 27. Mai. Auf einer heute Mittag einberufenen Pressekonferenz äußerte sich der Trainer des DFB-Teams, Oliver Bierhoff. Er war zusammen mit den beiden Fahrern Rosberg und Wehrlein bereits bei den Verletzten im Krankenhaus gewesen und "dass der DFB eng mit allen Behörden zusammenarbeiten werden, um so rasch wie möglich Aufklärung in den Fall zu bringen." Auch sprach Bierhoff davon, dass diese Art von Werbung grundsätzlich zu überdenken sei.	Auch Bürgermeisterin Rosmarie Pamer möchte nun wieder etwas Ruhe einkehren lassen, nachdem feststeht, dass der 63jährige verletzte Deutsche aus Thüringen außer Lebensgefahr ist. Das Trainingslager der deutschen Nationalelf solle sich unter glücklicheren Umständen fortsetzen. Trotzdem, der schwere Unfall wird in der deutschen Tagespresse gehörig kommentiert. Die Süddeutsche Zeitung titelt etwa "Drama beim Werbe-Dreh des DFB-Teams" und lässt auch die Passeirer Bürgermeisterin in einem Video-Interview zu Wort kommen, in dem sie von einem "schweren Schock" spricht.	Noch größer bringt die deutsche Bild-Zeitung die Story. "Ich hätte tot sein können" zitiert der Reporter den zweiten Verletzten, den Streckenposten Michael Klotz aus Walten. Er liegt mit dem Verdacht auf ein Schädelhirntrauma im Bozner Krankenhaus und wurde von lokalen und deutschen Reportern bereits interviewt. Den Unfallhergang beschreibt er ganz genau. Der deutsche Tourist habe nicht auf der Straße, sonden abseits davon gestanden und wollte ein Foto machen. "Trotzdem habe ich geschrien und bin zu ihm hingelaufen, wollte ihn wegziehen, da war es schon zu spät." Da hatte Nico Rosberg bereits gebremst, offensichtlich durch den Tumult irritiert, und das Auto des hinter ihm fahrenden Pascal Wehrlein hatte die beiden Männer im nächsten Moment zu Boden gerissen.	Die Carabinieri haben nun die Ermittlungen aufgenommen und bereits Augenzeugen befragt, auch den verletzten Streckenposten, der noch sagte: "Vielleicht hätten sie da nicht ganz so schnell sein müssen, nicht ganz so viel Theater machen sollen. Aber ich weiß es nicht.'}
+    
+    json={'Title': 'DFB Trainingslager: Um Aufklärung bemüht',
+
+        'Teaser': 'Wer ist Schuld am Unfall der beiden Rennfahrer Pascal Wehrlein und Nico Rosberg. Waren sie zu schnell unterwegs? Wurde die Strecke nicht gut genug gesichert? Oder tragen die Schaulustigen, die am Ende als verletzte Opfer im Krankenhaus landeten, auch eine Verantwortung?',
+
+        'Body': 'Antworten auf diese Fragen gab es aus dem Passeiertal bereits einige. Noch am Abend des Unfalls, bei dem die beiden Rennfahrer Nico Rosberg und Pascal Wehrlein zwei Personen mit ihren Mercedes-Sportwagen erfassten und verletzten, gab der Passeierer Hotelier und Gemeinderat Heinrich Dorfer eine erste Stellungnahme ab. Es sei alles reglulär und nach bestem Wissen und Gewissen zugegangen, die beiden Piloten seien nicht schnell gefahren, es habe sich "um einen blöden Zufall" gehandelt, sagte Dorfer in der RAI Tagesschau vom 27. Mai. Auf einer heute Mittag einberufenen Pressekonferenz äußerte sich der Trainer des DFB-Teams, Oliver Bierhoff. Er war zusammen mit den beiden Fahrern Rosberg und Wehrlein bereits bei den Verletzten im Krankenhaus gewesen und "dass der DFB eng mit allen Behörden zusammenarbeiten werden, um so rasch wie möglich Aufklärung in den Fall zu bringen." Auch sprach Bierhoff davon, dass diese Art von Werbung grundsätzlich zu überdenken sei. Auch Bürgermeisterin Rosmarie Pamer möchte nun wieder etwas Ruhe einkehren lassen, nachdem feststeht, dass der 63jährige verletzte Deutsche aus Thüringen außer Lebensgefahr ist. Das Trainingslager der deutschen Nationalelf solle sich unter glücklicheren Umständen fortsetzen. Trotzdem, der schwere Unfall wird in der deutschen Tagespresse gehörig kommentiert. Die Süddeutsche Zeitung titelt etwa "Drama beim Werbe-Dreh des DFB-Teams" und lässt auch die Passeirer Bürgermeisterin in einem Video-Interview zu Wort kommen, in dem sie von einem "schweren Schock" spricht. Noch größer bringt die deutsche Bild-Zeitung die Story. "Ich hätte tot sein können" zitiert der Reporter den zweiten Verletzten, den Streckenposten Michael Klotz aus Walten. Er liegt mit dem Verdacht auf ein Schädelhirntrauma im Bozner Krankenhaus und wurde von lokalen und deutschen Reportern bereits interviewt. Den Unfallhergang beschreibt er ganz genau. Der deutsche Tourist habe nicht auf der Straße, sonden abseits davon gestanden und wollte ein Foto machen. "Trotzdem habe ich geschrien und bin zu ihm hingelaufen, wollte ihn wegziehen, da war es schon zu spät." Da hatte Nico Rosberg bereits gebremst, offensichtlich durch den Tumult irritiert, und das Auto des hinter ihm fahrenden Pascal Wehrlein hatte die beiden Männer im nächsten Moment zu Boden gerissen. Die Carabinieri haben nun die Ermittlungen aufgenommen und bereits Augenzeugen befragt, auch den verletzten Streckenposten, der noch sagte: "Vielleicht hätten sie da nicht ganz so schnell sein müssen, nicht ganz so viel Theater machen sollen. Aber ich weiß es nicht."'
+        }
     
     try:
         #Initialise the module
-        key_word_extractor = KeywordExtractor( input_file_folder, input_file_name, output_folder_name) # initialises the module to read an article from a file
-        #key_word_extractor = KeywordExtractor( "json", json, outputDirectory) # initialises the module to read an article from a json
+        #key_word_extractor = KeywordExtractor( input_file_folder, input_file_name, output_folder_name) # initialises the module to read an article from a file
+        key_word_extractor = KeywordExtractor( "json", json, output_folder_name) # initialises the module to read an article from a json
         
         #Extract the keywords
         key_words_set = key_word_extractor.extract_keywords() # key_words_set contains the set of keywords extracted from the article
